@@ -1,13 +1,61 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Github } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState("");
+  const [contributors, setContributors] = useState([]);
+
+  const title = "Contributors";
+
+  const titleContainer = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.06,
+      },
+    },
+  };
+
+  const letterVariant = {
+    hidden: { opacity: 0, y: 8 },
+    visible: { opacity: 1, y: 0 },
+  };
+
+  const avatarContainer = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.3,
+      },
+    },
+  };
+
+  const avatarVariant = {
+    hidden: { opacity: 0, scale: 0.85 },
+    visible: { opacity: 1, scale: 1 },
+  };
+
+  useEffect(() => {
+    async function fetchContributors() {
+      try {
+        const res = await fetch(
+          "https://api.github.com/repos/raze0017/TriageList/contributors"
+        );
+        const data = await res.json();
+        setContributors(data.slice(0, 5));
+      } catch (error) {
+        console.error("Failed to fetch contributors");
+      }
+    }
+
+    fetchContributors();
+  }, []);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -20,7 +68,7 @@ export default function Home() {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.6 }}
         className="max-w-3xl mx-auto px-6 w-full"
       >
         <div className="flex items-center justify-between mb-16">
@@ -41,9 +89,8 @@ export default function Home() {
               href="https://github.com/raze0017/TriageList"
               target="_blank"
               rel="noopener noreferrer"
-              whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              className="text-[#334155] hover:text-[#0284C7] transition"
+              className="text-[#334155] hidden lg:hidden hover:text-[#0284C7] transition"
             >
               <Github size={22} />
             </motion.a>
@@ -78,6 +125,54 @@ export default function Home() {
           transparently. Built for real HR workflows.
         </motion.p>
 
+        {/* Contributors Section */}
+        {contributors.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="mb-16"
+          >
+            <motion.h3
+              variants={titleContainer}
+              initial="hidden"
+              animate="visible"
+              className="text-sm font-semibold tracking-wider text-[#0284C7] uppercase mb-6 flex"
+            >
+              {title.split("").map((char, index) => (
+                <motion.span key={index} variants={letterVariant}>
+                  {char}
+                </motion.span>
+              ))}
+            </motion.h3>
+
+            <motion.div
+              variants={avatarContainer}
+              initial="hidden"
+              animate="visible"
+              className="flex items-center gap-2"
+            >
+              {contributors.map((contributor) => (
+                <motion.a
+                  key={contributor.id}
+                  href={contributor.html_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variants={avatarVariant}
+                >
+                  <Image
+                    src={contributor.avatar_url}
+                    alt={contributor.login}
+                    width={42}
+                    height={42}
+                    className="rounded-full border border-slate-200"
+                  />
+                </motion.a>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+
         <motion.div
           layout
           className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200"
@@ -109,7 +204,6 @@ export default function Home() {
                   />
 
                   <motion.button
-                    whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     type="submit"
                     className="px-6 py-3 rounded-lg bg-[#0284C7] text-white font-medium"
