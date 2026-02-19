@@ -61,8 +61,6 @@ No additional signals are allowed in MVP.
 
 Consistency > cleverness.
 
-
-
 ### Architectural Properties
 
 - Upload is non-blocking
@@ -70,7 +68,7 @@ Consistency > cleverness.
 - Raw resume text is preserved
 - Signals are validated against strict schema
 - UI reflects processing status explicitly
-- No silent failures
+- No silent failure
 
 ---
 
