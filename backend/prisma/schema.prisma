@@ -7,9 +7,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  email     String   @unique
-  name      String?
+enum ApplicationStatus {
+  pending
+  processing
+  ready
+  unprocessable
+}
+
+enum ExperienceBand {
+  ZERO_TO_ONE
+  ONE_TO_THREE
+  THREE_TO_FIVE
+  FIVE_PLUS
+}
+
+enum Level {
+  low
+  medium
+  high
+}
+
+model JdVersion {
+  id        String        @id @default(uuid()) @db.Uuid
+  title     String
+  rawJdText String        @map("raw_jd_text")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  applications Application[]
+
+  @@map("jd_versions")
+}
+
+model Application {
+  id            String            @id @default(uuid()) @db.Uuid
+  jdId          String            @map("jd_id") @db.Uuid
+  applicantName String            @map("applicant_name")
+  email         String
+  filePath      String            @map("file_path")
+  rawText       Json              @map("raw_text") @db.JsonB
+  status        ApplicationStatus @default(pending)
+  submittedAt   DateTime          @default(now()) @map("submitted_at")
+
+  jdVersion       JdVersion         @relation(fields: [jdId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  candidateSignal CandidateSignal?
+
+  @@index([jdId])
+  @@index([status])
+  @@map("applications")
+}
+
+model CandidateSignal {
+  id                 String         @id @default(uuid()) @db.Uuid
+  applicationId      String         @unique @map("application_id") @db.Uuid
+  primarySkills      String[]       @map("primary_skills")
+  experienceBand     ExperienceBand @map("experience_band")
+  domainAlignment    Level          @map("domain_alignment")
+  resumeCompleteness Level          @map("resume_completeness")
+  ambiguityFlag      Boolean        @default(false) @map("ambiguity_flag")
+  jdMatchScore       Level          @map("jd_match_score")
+  extractedAt        DateTime       @default(now()) @map("extracted_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([jdMatchScore])
+  @@index([experienceBand])
+  @@index([domainAlignment])
+  @@map("candidate_signals")
 }

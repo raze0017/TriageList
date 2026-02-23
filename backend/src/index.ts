@@ -1,48 +1,36 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import { PrismaClient } from "@prisma/client";
+import { createApp } from "./app";
+import { env } from "./config/env";
+import { logger } from "./config/logger";
+import { prisma } from "./lib/prisma";
 
-const prisma = new PrismaClient();
-dotenv.config();
+const app = createApp();
+const server = app.listen(env.PORT, () => {
+  logger.info(`Server running on port ${env.PORT}`);
+});
 
-const app = express();
+const shutdown = async (signal: string) => {
+  logger.info(`Received ${signal}. Starting graceful shutdown...`);
+  server.close(async (closeError) => {
+    if (closeError) {
+      logger.error("Failed to close HTTP server cleanly", closeError);
+      process.exit(1);
+    }
 
-app.use(cors());
-app.use(express.json());
-
-const PORT = process.env.PORT || 4000;
-
-app.get("/", (_req, res) => {
-  res.json({
-    message: "API is running",
-    timestamp: new Date().toISOString(),
+    try {
+      await prisma.$disconnect();
+      logger.info("Prisma disconnected. Shutdown complete.");
+      process.exit(0);
+    } catch (disconnectError) {
+      logger.error("Failed during Prisma disconnect", disconnectError);
+      process.exit(1);
+    }
   });
-});
-app.post("/seed", async (_req, res) => {
-  try {
-    const user = await prisma.user.create({
-      data: {
-        email: `user${Date.now()}@example.com`,
-        name: "Test User",
-      },
-    });
+};
 
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error });
-  }
+process.on("SIGTERM", () => {
+  void shutdown("SIGTERM");
 });
 
-app.get("/users", async (_req, res) => {
-  const users = await prisma.user.findMany();
-  res.json(users);
-});
-
-app.get("/health", (_req, res) => {
-  res.status(200).send("OK");
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+process.on("SIGINT", () => {
+  void shutdown("SIGINT");
 });

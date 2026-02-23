@@ -1,7 +1,62 @@
-node_modules
-# Keep environment variables out of version control
+# ----------------------
+# Node
+# ----------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ----------------------
+# Environment
+# ----------------------
 .env
+.env.*
+!.env.example
 
-/generated/prisma
+# ----------------------
+# Build output
+# ----------------------
+dist/
+build/
+coverage/
 
-/src/generated/prisma
+# ----------------------
+# TypeScript
+# ----------------------
+*.tsbuildinfo
+
+# ----------------------
+# Logs
+# ----------------------
+logs/
+*.log
+
+# ----------------------
+# OS files
+# ----------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------
+# VS Code
+# ----------------------
+.vscode/
+.vscode-server/
+
+# ----------------------
+# Docker
+# ----------------------
+docker-compose.override.yml
+
+# ----------------------
+# Prisma
+# ----------------------
+# Keep schema and migrations tracked
+# Ignore generated client if inside custom folder
+prisma/generated/
+
+# ----------------------
+# Testing
+# ----------------------
+coverage/
