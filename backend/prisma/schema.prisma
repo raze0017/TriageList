@@ -7,11 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── Enums ───────────────────────────────────────────────
+
 enum ApplicationStatus {
-  pending
-  processing
-  ready
-  unprocessable
+  pending       // uploaded, not yet extracted
+  processing    // extraction in progress
+  ready         // extracted, available for scoring
+  unprocessable // extraction failed
+}
+
+enum JobApplicationStatus {
+  pending   // not yet scored
+  scoring   // LLM call in progress
+  scored    // complete
+  failed    // LLM scoring failed
+}
+
+enum JdStatus {
+  draft
+  active
+  closed
 }
 
 enum ExperienceBand {
@@ -27,20 +42,29 @@ enum Level {
   high
 }
 
+// ─── Models ──────────────────────────────────────────────
+
+// Job posting created by HR
 model JdVersion {
-  id        String        @id @default(uuid()) @db.Uuid
-  title     String
-  rawJdText String        @map("raw_jd_text")
-  createdAt DateTime      @default(now()) @map("created_at")
+  id           String    @id @default(uuid()) @db.Uuid
+  title        String
+  rawJdText    String    @map("raw_jd_text")
+  requirements String?   // explicit requirements field for LLM prompt
+  status       JdStatus  @default(draft)
+  createdBy   String   @map("created_by") @default("system")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime @map("updated_at") @default(now())
 
-  applications Application[]
+  jobApplications JobApplication[]
 
+  @@index([status])
   @@map("jd_versions")
 }
 
+// Resume entity — decoupled from any specific job
+// One application (resume) can be scored against many jobs
 model Application {
   id            String            @id @default(uuid()) @db.Uuid
-  jdId          String            @map("jd_id") @db.Uuid
   applicantName String            @map("applicant_name")
   email         String
   filePath      String            @map("file_path")
@@ -48,14 +72,49 @@ model Application {
   status        ApplicationStatus @default(pending)
   submittedAt   DateTime          @default(now()) @map("submitted_at")
 
-  jdVersion       JdVersion         @relation(fields: [jdId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   candidateSignal CandidateSignal?
+  jobApplications JobApplication[]
 
-  @@index([jdId])
   @@index([status])
+  @@index([email])
   @@map("applications")
 }
 
+// Join table — links a resume to a job posting
+// This is where scoring results live
+model JobApplication {
+  id            String              @id @default(uuid()) @db.Uuid
+  jdId          String              @map("jd_id") @db.Uuid
+  applicationId String              @map("application_id") @db.Uuid
+  status        JobApplicationStatus @default(pending)
+
+  // Scoring output
+  matchScore    Int?                @map("match_score") // 0-100 numeric for ranking
+  reasoning     String[]            // bullet points from LLM
+  attributeScores Json?             @map("attribute_scores") @db.JsonB
+  // attributeScores shape:
+  // {
+  //   technical_skills: { score: 85, label: "high" },
+  //   experience_relevance: { score: 72, label: "medium" },
+  //   education_fit: { score: 90, label: "high" },
+  //   communication: { score: 68, label: "medium" }
+  // }
+
+  scoredAt      DateTime?           @map("scored_at")
+  createdAt     DateTime            @default(now()) @map("created_at")
+
+  jdVersion   JdVersion   @relation(fields: [jdId], references: [id], onDelete: Restrict)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([jdId, applicationId]) // prevent duplicate submissions
+  @@index([jdId])
+  @@index([status])
+  @@index([matchScore]) // for ranked queries
+  @@map("job_applications")
+}
+
+// Extracted signals from resume text — per application, not per job
+// These are reusable across all jobs this resume is submitted to
 model CandidateSignal {
   id                 String         @id @default(uuid()) @db.Uuid
   applicationId      String         @unique @map("application_id") @db.Uuid
@@ -67,9 +126,8 @@ model CandidateSignal {
   jdMatchScore       Level          @map("jd_match_score")
   extractedAt        DateTime       @default(now()) @map("extracted_at")
 
-  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
-  @@index([jdMatchScore])
   @@index([experienceBand])
   @@index([domainAlignment])
   @@map("candidate_signals")
