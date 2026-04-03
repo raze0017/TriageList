@@ -60,3 +60,8 @@ prisma/generated/
 # Testing
 # ----------------------
 coverage/
+
+# ----------------------
+# Uploads
+# ----------------------
+uploads/
