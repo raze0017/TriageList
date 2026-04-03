@@ -15,4 +15,7 @@ export const env = {
   PORT: Number(process.env.PORT ?? 4000),
   DATABASE_URL: getRequired("DATABASE_URL"),
   CORS_ORIGIN: process.env.CORS_ORIGIN ?? "*",
+  GEMINI_API_KEY: getRequired("GEMINI_API_KEY"),
+  UPLOAD_DIR: process.env.UPLOAD_DIR ?? "./uploads",
+  MAX_FILE_SIZE_MB: Number(process.env.MAX_FILE_SIZE_MB ?? 10),
 };
