@@ -17,10 +17,22 @@ export const uploadApplicationHandler = async (req: Request, res: Response, next
     // Enqueue extraction job if status is pending
     if (application.status === "pending") {
       const queue = getQueue();
-      await queue.send("extract-signals", { 
-        applicationId: application.id,
-        jdId: input.jdId
-      });
+      try {
+        console.log("Attempting to enqueue job for application:", application.id);
+        const job = await queue.add("extract", { 
+          applicationId: application.id,
+          jdId: input.jdId
+        }, {
+          attempts: 6,
+          backoff: {
+            type: 'exponential',
+            delay: 10000,
+          }
+        });
+        console.log("Job successfully enqueued with ID:", job.id);
+      } catch (qErr) {
+        console.error("FAILED to enqueue job:", qErr);
+      }
     }
 
     res.status(201).json({
