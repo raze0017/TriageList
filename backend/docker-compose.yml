@@ -29,7 +29,18 @@ services:
       - /app/node_modules
     depends_on:
       - postgres
+      - redis
     command: npm run dev
+
+  redis:
+    image: redis:7-alpine
+    container_name: app-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
 
 volumes:
   pgdata:
+  redisdata:

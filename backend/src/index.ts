@@ -2,10 +2,12 @@ import { createApp } from "./app";
 import { env } from "./config/env";
 import { logger } from "./config/logger";
 import { prisma } from "./lib/prisma";
-import { startQueue, stopQueue } from "./lib/queue";
+import { startQueue, stopQueue, createWorker } from "./lib/queue";
+import { extractSignalsWorker } from "./workers/extractSignals.worker";
 
 const startServer = async () => {
   await startQueue();
+  createWorker("extract-signals", extractSignalsWorker);
 
   const app = createApp();
   const server = app.listen(env.PORT, () => {

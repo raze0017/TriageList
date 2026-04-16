@@ -82,8 +82,7 @@ export const getApplicationById = async (id: string) => {
       applicantName: true,
       email: true,
       status: true,
-      createdAt: true,
-      updatedAt: true,
+      submittedAt: true,
       candidateSignal: true,
     },
   });
