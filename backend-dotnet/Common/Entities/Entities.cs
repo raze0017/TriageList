@@ -1,7 +1,7 @@
 using System.Text.Json;
-using TriageList.Api.Domain.Enums;
+using TriageList.Api.Common.Enums;
 
-namespace TriageList.Api.Domain.Entities;
+namespace TriageList.Api.Common.Entities;
 
 public class JdVersion
 {

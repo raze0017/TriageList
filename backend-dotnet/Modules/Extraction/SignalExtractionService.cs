@@ -1,25 +1,23 @@
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using TriageList.Api.Contracts;
-using TriageList.Api.Domain.Entities;
-using TriageList.Api.Domain.Enums;
-using TriageList.Api.Infrastructure.Data;
+using TriageList.Api.Common.Data;
+using TriageList.Api.Common.Entities;
+using TriageList.Api.Common.Enums;
 
-namespace TriageList.Api.Services;
+namespace TriageList.Api.Modules.Extraction;
 
 public interface ISignalExtractionService
 {
     Task ExtractSignalsAsync(Guid applicationId, Guid jdId, CancellationToken cancellationToken = default);
 }
 
-public class GeminiSignalExtractionService : ISignalExtractionService
+public class SignalExtractionService : ISignalExtractionService
 {
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
     private readonly HttpClient _httpClient;
-    private readonly ILogger<GeminiSignalExtractionService> _logger;
+    private readonly ILogger<SignalExtractionService> _logger;
 
     private const string PromptTemplate = """
     You are an expert HR recruitment assistant. Your job is to strictly extract exactly 6 candidate signals from a resume when compared to a specific job description (JD).
@@ -48,11 +46,11 @@ public class GeminiSignalExtractionService : ISignalExtractionService
     Analyze the resume against the job description and return the JSON object:
     """;
 
-    public GeminiSignalExtractionService(
+    public SignalExtractionService(
         AppDbContext db,
         IConfiguration config,
         HttpClient httpClient,
-        ILogger<GeminiSignalExtractionService> logger)
+        ILogger<SignalExtractionService> logger)
     {
         _db = db;
         _config = config;

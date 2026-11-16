@@ -1,4 +1,4 @@
-namespace TriageList.Api.Domain.Enums;
+namespace TriageList.Api.Common.Enums;
 
 public enum ApplicationStatus
 {

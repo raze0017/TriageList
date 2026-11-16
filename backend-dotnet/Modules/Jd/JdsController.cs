@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TriageList.Api.Contracts;
-using TriageList.Api.Domain.Entities;
-using TriageList.Api.Infrastructure.Data;
+using TriageList.Api.Common.Data;
+using TriageList.Api.Common.Entities;
 
-namespace TriageList.Api.Controllers;
+namespace TriageList.Api.Modules.Jd;
 
 [ApiController]
 [Route("api/v1/jds")]

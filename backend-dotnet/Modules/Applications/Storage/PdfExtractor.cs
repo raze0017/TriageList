@@ -1,6 +1,6 @@
 using UglyToad.PdfPig;
 
-namespace TriageList.Api.Services;
+namespace TriageList.Api.Modules.Applications.Storage;
 
 public interface IPdfExtractor
 {

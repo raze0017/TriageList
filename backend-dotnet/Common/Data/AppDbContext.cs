@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using TriageList.Api.Domain.Entities;
-using TriageList.Api.Domain.Enums;
+using TriageList.Api.Common.Entities;
+using TriageList.Api.Common.Enums;
 
-namespace TriageList.Api.Infrastructure.Data;
+namespace TriageList.Api.Common.Data;
 
 public class AppDbContext : DbContext
 {

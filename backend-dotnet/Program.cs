@@ -2,13 +2,15 @@ using FluentValidation.AspNetCore;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
-using TriageList.Api.Infrastructure.Data;
-using TriageList.Api.Services;
-using TriageList.Api.Validation;
+using TriageList.Api.Common.Data;
+using TriageList.Api.Modules.Applications.Storage;
+using TriageList.Api.Modules.Extraction;
+using TriageList.Api.Modules.Health;
+using TriageList.Api.Modules.Jd;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add Controllers & FluentValidation
+// 1. Add Controllers & FluentValidation (scans all modules)
 builder.Services.AddControllers();
 builder.Services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<CreateJdRequestValidator>());
 
@@ -37,9 +39,9 @@ builder.Services.AddHangfireServer(options =>
     options.WorkerCount = Environment.ProcessorCount * 2;
 });
 
-// 4. Register Services & Typed HttpClient
+// 4. Register Module Services & Typed HttpClient
 builder.Services.AddScoped<IPdfExtractor, PdfPigExtractor>();
-builder.Services.AddHttpClient<ISignalExtractionService, GeminiSignalExtractionService>();
+builder.Services.AddHttpClient<ISignalExtractionService, SignalExtractionService>();
 
 // 5. CORS
 var allowedOrigin = builder.Configuration["Cors:Origin"] ?? "*";
@@ -78,7 +80,7 @@ app.UseHangfireDashboard("/hangfire");
 
 app.MapControllers();
 
-// Health check endpoint
-app.MapGet("/api/v1/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+// Health check endpoint (mapped from Health module)
+app.MapHealthEndpoints();
 
 app.Run();

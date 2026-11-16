@@ -2,13 +2,13 @@ using System.Text.Json;
 using Hangfire;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TriageList.Api.Contracts;
-using TriageList.Api.Domain.Entities;
-using TriageList.Api.Domain.Enums;
-using TriageList.Api.Infrastructure.Data;
-using TriageList.Api.Services;
+using TriageList.Api.Common.Data;
+using TriageList.Api.Common.Entities;
+using TriageList.Api.Common.Enums;
+using TriageList.Api.Modules.Applications.Storage;
+using TriageList.Api.Modules.Extraction;
 
-namespace TriageList.Api.Controllers;
+namespace TriageList.Api.Modules.Applications;
 
 [ApiController]
 [Route("api/v1/applications")]
@@ -128,7 +128,7 @@ public class ApplicationsController : ControllerBase
             application.Email,
             application.Status.ToString().ToLower(),
             application.SubmittedAt,
-            application.CandidateSignal == null ? null : new CandidateSignalResponse(
+            application.CandidateSignal == null ? null : new ApplicationCandidateSignalResponse(
                 application.CandidateSignal.PrimarySkills,
                 application.CandidateSignal.ExperienceBand.ToString(),
                 application.CandidateSignal.DomainAlignment.ToString().ToLower(),
